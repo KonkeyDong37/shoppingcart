@@ -16,6 +16,9 @@ function loadEventListeners() {
 
     // Clear cart Btn
     clearCartBtn.addEventListener('click', clearCart)
+
+    // Document ready
+    document.addEventListener('DOMContentLoaded', getFromLocalStorage);
 }
 
 
@@ -81,7 +84,7 @@ function saveIntoStorage(course) {
     courses.push(course);
 
     // Since storage only saves string, we need to convert JSON into String
-    localStorage.setItem('course', JSON.stringify(courses))
+    localStorage.setItem('courses', JSON.stringify(courses))
 }
 
 // Get the content from Storage
@@ -100,10 +103,32 @@ function getCoursesFromStorage() {
 
 // Remove course from the DOM
 function removeCourse(evt) {
+    let course, courseId;
 
     if(evt.target.classList.contains('remove')) {
         evt.target.parentElement.parentElement.remove();
+        course = evt.target.parentElement.parentElement;
+        courseId = course.querySelector('a').getAttribute('data-id')
     }
+    
+    // Remove from the Local storage
+    removeCourseLocalStorage(courseId);
+}
+
+// Remove from Local storage
+function removeCourseLocalStorage(id) {
+    // Get the Local storage data
+    let coursesLS = getCoursesFromStorage();
+
+    // loop throught tha array and find index to remove
+    coursesLS.forEach(function(courseLS, index) {
+        if (courseLS.id === id) {
+            coursesLS.splice(index, 1);
+        }
+    });
+
+    // Add the rest of the array
+    localStorage.setItem('courses', JSON.stringify(coursesLS))
 }
 
 // Clears the shopping cart
@@ -113,4 +138,39 @@ function clearCart() {
     while(shoppingCartContent.firstChild) {
         shoppingCartContent.removeChild(shoppingCartContent.firstChild);
     }
+
+    // Clear from Local Storage
+    clearLocalStorage();
+}
+
+// Clears the whole Local Storage
+function clearLocalStorage() {
+    localStorage.clear();
+}
+
+// Loads when document is ready and print courses into shopping cart
+function getFromLocalStorage() {
+    
+    let coursesLS = getCoursesFromStorage();
+
+    // LOOP throught the courses and print into the cart
+    coursesLS.forEach(function(course) {
+        // Create <tr>
+        const row = document.createElement('tr');
+
+        // Print the content
+        row.innerHTML = `
+            <tr>
+                <td>
+                    <img src="${course.image}" width="100">
+                </td>
+                <td>${course.title}</td>
+                <td>${course.price}</td>
+                <td>
+                    <a href="#" class="remove" data-id="${course.id}">X</a>
+                </td>
+            </tr>
+        `;
+        shoppingCartContent.appendChild(row);
+    });
 }
